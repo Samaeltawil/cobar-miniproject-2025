@@ -135,15 +135,14 @@ class Controller(BaseController):
         self.retina = Retina()
 
         self.last_vision_decision = "clear"
-        self.phase = "orienting"  # either "orienting" or "moving"
+        self.phase = "orienting"
         self.phase_timer = 0
-        self.orientation_duration = 200  # steps for initial orientation
+        self.orientation_duration = 200  ## steps for initial orientation
 
         # Odor memory buffer to smooth out fluctuations
         self.odor_buffer = deque(maxlen=5)
 
     def get_actions(self, obs: Observation) -> Action:
-        # Compute and store odor-based turn bias
         turn_bias = compute_odor_turn_bias(obs)
         self.odor_buffer.append(turn_bias)
         smoothed_turn_bias = np.mean(self.odor_buffer)
