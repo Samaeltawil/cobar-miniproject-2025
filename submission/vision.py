@@ -121,6 +121,11 @@
 
 import numpy as np
 from scipy.ndimage import label, center_of_mass
+from enum import Enum
+class Direction(Enum):
+    CLEAR = 0
+    LEFT = 1
+    RIGHT =2
 
 class ObstacleAvoid():
     def __init__(self, threshold=50, right_edge_limit=100, left_edge_start=410):
@@ -143,14 +148,15 @@ class ObstacleAvoid():
         obs_ledge = np.any(vision_left[:, self.left_edge_start:] < self.threshold)
 
         # Full logic with combined conditions
-        if (score_left > score_right + 500) or (obs_ledge):
-            decision = "turn_right"
-        elif (score_right > score_left + 500) or (obs_ledge and obs_redge) or (obs_redge):
-            decision = "turn_left"
-        elif max(score_left, score_right) < 6000:
-            decision = "clear"
+
+        if max(score_left, score_right) < 3500:
+            decision = Direction.CLEAR
+        elif (score_left > score_right) or (obs_ledge):
+            decision = Direction.RIGHT
         else:
-            decision = "slow_down"
+            decision = Direction.LEFT
+        
+        
 
         # print(f"[Vision] Scores — Left: {score_left:.2f}, Right: {score_right:.2f}, "
         #       f"obs_redge: {obs_redge}, obs_ledge: {obs_ledge} → Decision: {decision}")
@@ -186,3 +192,31 @@ class ObstacleAvoid():
 
     def compute_total_score(self, obstacles):
         return sum(obs["score"] for obs in obstacles)
+
+    def vision_ball(self, vision_left, vision_right):
+
+        mask_left = vision_left < self.threshold
+        mask_right = vision_right < self.threshold
+
+        _, obstacles_left = self.detect_obstacles(mask_left, vision_left, is_left=True)
+        _, obstacles_right = self.detect_obstacles(mask_right, vision_right, is_left=False)
+
+        score_left = self.compute_total_score(obstacles_left)
+        score_right = self.compute_total_score(obstacles_right)
+
+        # Use configurable edge ranges
+        obs_redge = np.any(vision_right[:, :self.right_edge_limit] < self.threshold)
+        obs_ledge = np.any(vision_left[:, self.left_edge_start:] < self.threshold)
+
+        
+        
+        
+        
+
+        # print(f"[Vision] Scores — Left: {score_left:.2f}, Right: {score_right:.2f}, "
+        #       f"obs_redge: {obs_redge}, obs_ledge: {obs_ledge} → Decision: {decision}")
+
+        return decision
+       
+
+        

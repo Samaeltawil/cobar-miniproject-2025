@@ -4,6 +4,7 @@ from .vision import ObstacleAvoid
 import numpy as np
 from flygym.vision import Retina
 from .olfactory import compute_action_from_odor
+from .vision import Direction
 
 
 class Controller(BaseController):
@@ -30,15 +31,16 @@ class Controller(BaseController):
 
         # Get decision from vision module
         decision = self.navigator.get_decision(vision_left, vision_right)
+        action_array = compute_action_from_odor(obs)
+        if decision == Direction.RIGHT:
+            action_array[0]= 1.0 
+        elif decision == Direction.LEFT:
+            action_array[1]= 1.0 
 
-        if decision == "turn_left":
-            action_array = np.array([0, 1.0])
-        elif decision == "turn_right":
-            action_array = np.array([1.0, 0])
-        elif decision == "slow_down":
-            action_array = compute_action_from_odor(obs)*3
-        else:
-            action_array = compute_action_from_odor(obs)
+
+
+
+
 
         joint_angles, adhesion = step_cpg(
             cpg_network=self.cpg_network,
